@@ -22,13 +22,14 @@ pipeline {
 
         stage('Login to Docker Hub') {
             steps {
-                withCredentials([string(
-                    credentialsId: 'dockerhub-PAT',
-                    variable: 'DOCKER_PAT'
+                withCredentials([usernamePassword(
+                    credentialsId: 'docker-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASSWORD'
                 )]) {
                     bat '''
                         @echo off
-                        echo %DOCKER_PAT%| docker login -u diksshitat --password-stdin
+                        echo %DOCKER_PASSWORD%| docker login -u %DOCKER_USER% --password-stdin
                         if errorlevel 1 exit /b 1
                     '''
                 }
@@ -44,10 +45,13 @@ pipeline {
 
     post {
         success {
-            echo 'Docker image built and pushed successfully.'
+            echo 'SUCCESS: Docker image built and pushed to Docker Hub!'
         }
         failure {
-            echo 'Pipeline failed. Check Console Output.'
+            echo 'FAILED: Check the Jenkins Console Output for details.'
+        }
+        always {
+            echo 'Pipeline execution completed.'
         }
     }
 }

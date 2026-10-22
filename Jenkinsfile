@@ -1,9 +1,9 @@
-```groovy
+
 pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "diksshitat/exp10"
+        DOCKER_IMAGE = 'diksshitat/exp10'
     }
 
     stages {
@@ -57,4 +57,3 @@ pipeline {
         }
     }
 }
-```

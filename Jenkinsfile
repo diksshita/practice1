@@ -1,3 +1,4 @@
+```groovy
 pipeline {
     agent any
 
@@ -15,20 +16,23 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                bat 'docker build -t %DOCKER_IMAGE%:v1 .'
+                sh 'docker build -t ${DOCKER_IMAGE}:v1 .'
             }
         }
 
         stage('Login to Docker Hub') {
             steps {
-                withCredentials([string(
-                    credentialsId: 'dockerhub-PAT',
-                    variable: 'DOCKER_PAT'
-                )]) {
-                    bat '''
-                    @echo off
-                    echo %DOCKER_PAT%|docker login -u diksshitat --password-stdin
-                   if errorlevel 1 exit /b 1
+                withCredentials([
+                    string(
+                        credentialsId: 'dockerhub-PAT',
+                        variable: 'DOCKER_PAT'
+                    )
+                ]) {
+                    sh '''
+                        set +x
+                        echo "$DOCKER_PAT" | docker login \
+                            -u diksshitat \
+                            --password-stdin
                     '''
                 }
             }
@@ -36,7 +40,7 @@ pipeline {
 
         stage('Push Docker Image') {
             steps {
-                bat 'docker push %DOCKER_IMAGE%:v1'
+                sh 'docker push ${DOCKER_IMAGE}:v1'
             }
         }
     }
@@ -48,5 +52,9 @@ pipeline {
         failure {
             echo 'Pipeline failed. Check Console Output.'
         }
+        always {
+            sh 'docker logout || true'
+        }
     }
 }
+```

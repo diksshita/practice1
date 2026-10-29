@@ -16,7 +16,9 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                bat 'docker build -t %DOCKER_IMAGE%:v1 .'
+                bat '''
+                    docker build -t %DOCKER_IMAGE%:v1 .
+                '''
             }
         }
 
@@ -28,7 +30,8 @@ pipeline {
                 )]) {
                     bat '''
                         @echo off
-                        docker login -u diksshitat --password-stdin < nul
+                        echo %DOCKER_PAT% | docker login -u diksshitat --password-stdin
+                        if errorlevel 1 exit /b 1
                     '''
                 }
             }
@@ -36,19 +39,11 @@ pipeline {
 
         stage('Push Docker Image') {
             steps {
-                withCredentials([string(
-                    credentialsId: 'dockerhub-PAT',
-                    variable: 'DOCKER_PAT'
-                )]) {
-                    bat '''
-                        @echo off
-                        echo %DOCKER_PAT% | docker login -u diksshitat --password-stdin
-                        if errorlevel 1 exit /b 1
-                        docker push %DOCKER_IMAGE%:v1
-                        if errorlevel 1 exit /b 1
-                        docker logout
-                    '''
-                }
+                bat '''
+                    docker push %DOCKER_IMAGE%:v1
+                    if errorlevel 1 exit /b 1
+                    docker logout
+                '''
             }
         }
     }

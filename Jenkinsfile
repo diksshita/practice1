@@ -4,6 +4,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'diksshitat/abc'
+        DOCKER_EXE = 'C:\\Users\\Deepak\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
     }
 
     stages {
@@ -17,7 +18,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 bat '''
-                    docker build -t %DOCKER_IMAGE%:v1 .
+                    "%DOCKER_EXE%" build -t %DOCKER_IMAGE%:v1 .
+                    if errorlevel 1 exit /b 1
                 '''
             }
         }
@@ -30,7 +32,7 @@ pipeline {
                 )]) {
                     bat '''
                         @echo off
-                        echo %DOCKER_PAT% | docker login -u diksshitat --password-stdin
+                        echo %DOCKER_PAT% | "%DOCKER_EXE%" login -u diksshitat --password-stdin
                         if errorlevel 1 exit /b 1
                     '''
                 }
@@ -40,9 +42,9 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 bat '''
-                    docker push %DOCKER_IMAGE%:v1
+                    "%DOCKER_EXE%" push %DOCKER_IMAGE%:v1
                     if errorlevel 1 exit /b 1
-                    docker logout
+                    "%DOCKER_EXE%" logout
                 '''
             }
         }

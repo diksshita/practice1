@@ -16,23 +16,19 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t ${DOCKER_IMAGE}:v1 .'
+                bat 'docker build -t %DOCKER_IMAGE%:v1 .'
             }
         }
 
         stage('Login to Docker Hub') {
             steps {
-                withCredentials([
-                    string(
-                        credentialsId: 'docker_hub',
-                        variable: 'DOCKER_PAT'
-                    )
-                ]) {
-                    sh '''
-                        set +x
-                        echo "$DOCKER_PAT" | docker login \
-                            -u diksshitat \
-                            --password-stdin
+                withCredentials([string(
+                    credentialsId: 'dockerhub-PAT',
+                    variable: 'DOCKER_PAT'
+                )]) {
+                    bat '''
+                        @echo off
+                        docker login -u diksshitat --password-stdin < nul
                     '''
                 }
             }
@@ -40,20 +36,29 @@ pipeline {
 
         stage('Push Docker Image') {
             steps {
-                sh 'docker push ${DOCKER_IMAGE}:v1'
+                withCredentials([string(
+                    credentialsId: 'dockerhub-PAT',
+                    variable: 'DOCKER_PAT'
+                )]) {
+                    bat '''
+                        @echo off
+                        echo %DOCKER_PAT% | docker login -u diksshitat --password-stdin
+                        if errorlevel 1 exit /b 1
+                        docker push %DOCKER_IMAGE%:v1
+                        if errorlevel 1 exit /b 1
+                        docker logout
+                    '''
+                }
             }
         }
     }
 
     post {
         success {
-            echo 'Docker image built and pushed successfully.'
+            echo 'Docker image built and pushed successfully!'
         }
         failure {
             echo 'Pipeline failed. Check Console Output.'
-        }
-        always {
-            sh 'docker logout || true'
         }
     }
 }

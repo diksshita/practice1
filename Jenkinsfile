@@ -24,7 +24,7 @@ pipeline {
             steps {
                 withCredentials([
                     string(
-                        credentialsId: 'dockerhub-PAT',
+                        credentialsId: 'docker_hub',
                         variable: 'DOCKER_PAT'
                     )
                 ]) {
